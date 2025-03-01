@@ -25,13 +25,13 @@ func ProcessOrders(inputOrders []models.InputOrder) []models.CleanedOrder {
 				MaterialId: materialId,
 				ModelId:    modelId,
 				Qty:        quantity,
-				UnitPrice:  unitPrice / float64(extraCount),
-				TotalPrice: (unitPrice * float64(quantity)) / float64(extraCount),
+				UnitPrice:  unitPrice / float64(count+extraCount-1),
+				TotalPrice: (unitPrice * float64(quantity)) / float64(count+extraCount-1),
 			}
 			cleanedOrders = append(cleanedOrders, cleanedOrder)
 			orderNo++
 		}
-		cleanedOrders = append(cleanedOrders, addComplementaryItems(count, extraCount, orderNo)...)
+		cleanedOrders = append(cleanedOrders, addComplementaryItems(count*inputOrder.Qty, extraCount, orderNo)...)
 		orderNo++
 		cleanedOrders = append(cleanedOrders, addCleanerItem(productIds, inputOrder.Qty, extraCount, orderNo)...)
 		orderNo++

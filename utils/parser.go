@@ -25,7 +25,7 @@ func ParseProductId(platformProductId string, Qty int) ([]string, int, int) {
 		}
 	}
 
-	return productIds, len(productIds) * Qty, extraCount + 1
+	return productIds, len(productIds), extraCount + 1
 }
 
 func ExtractMaterialAndModelId(productId string) (string, string) {
@@ -33,7 +33,7 @@ func ExtractMaterialAndModelId(productId string) (string, string) {
 	cleanedProductId := re.ReplaceAllString(productId, "")
 	parts := strings.Split(cleanedProductId, "-")
 	materialId := parts[0] + "-" + parts[1]
-	modelId := parts[2]
+	modelId := strings.TrimPrefix(cleanedProductId, materialId+"-")
 	return materialId, modelId
 }
 

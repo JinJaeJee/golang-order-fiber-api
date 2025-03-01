@@ -1,6 +1,7 @@
 package services
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/JinJaeJee/golang-order-fiber-api/models"
@@ -12,7 +13,7 @@ func ProcessOrders(inputOrders []models.InputOrder) []models.CleanedOrder {
 	orderNo := 1
 
 	for _, inputOrder := range inputOrders {
-		productIds, count, extraCount := utils.ParseProductId(inputOrder.PlatformProductId)
+		productIds, count, extraCount := utils.ParseProductId(inputOrder.PlatformProductId, inputOrder.Qty)
 		for _, productId := range productIds {
 			materialId, modelId := utils.ExtractMaterialAndModelId(productId)
 
@@ -24,15 +25,15 @@ func ProcessOrders(inputOrders []models.InputOrder) []models.CleanedOrder {
 				MaterialId: materialId,
 				ModelId:    modelId,
 				Qty:        quantity,
-				UnitPrice:  unitPrice / float64(count+extraCount),
-				TotalPrice: (unitPrice * float64(quantity)) / float64(count+extraCount),
+				UnitPrice:  unitPrice / float64(extraCount),
+				TotalPrice: (unitPrice * float64(quantity)) / float64(extraCount),
 			}
 			cleanedOrders = append(cleanedOrders, cleanedOrder)
 			orderNo++
 		}
 		cleanedOrders = append(cleanedOrders, addComplementaryItems(count, extraCount, orderNo)...)
 		orderNo++
-		cleanedOrders = append(cleanedOrders, addCleanerItem(inputOrder.PlatformProductId, orderNo)...)
+		cleanedOrders = append(cleanedOrders, addCleanerItem(productIds, inputOrder.Qty, extraCount, orderNo)...)
 		orderNo++
 	}
 
@@ -45,7 +46,7 @@ func addComplementaryItems(qty int, extraQty int, orderNo int) []models.CleanedO
 	complementaryItems = append(complementaryItems, models.CleanedOrder{
 		No:         orderNo,
 		ProductId:  "WIPING-CLOTH",
-		Qty:        qty + extraQty,
+		Qty:        qty + extraQty - 1,
 		UnitPrice:  0.00,
 		TotalPrice: 0.00,
 	})
@@ -53,26 +54,49 @@ func addComplementaryItems(qty int, extraQty int, orderNo int) []models.CleanedO
 	return complementaryItems
 }
 
-func addCleanerItem(platformProductId string, orderNo int) []models.CleanedOrder {
-	var cleanerItems []models.CleanedOrder
-	textureCount := make(map[string]int)
+func addCleanerItem(platformProductIds []string, qty int, extraQty int, orderNo int) []models.CleanedOrder {
+	cleanerCount := make(map[string]int)
 
-	// Split product IDs
-	productIds := strings.Split(platformProductId, "/")
-	for _, productId := range productIds {
-		parts := strings.Split(productId, "-")
-		if len(parts) >= 2 {
-			texture := strings.ToUpper(parts[1])
-			textureCount[texture]++
+	for _, productId := range platformProductIds {
+
+		mainParts := strings.Split(productId, "*")
+		baseId := mainParts[0]
+		itemQty := 1
+
+		if len(mainParts) == 2 {
+			parsedQty, err := strconv.Atoi(mainParts[1])
+			if err == nil {
+				itemQty = parsedQty
+			}
 		}
+
+		parts := strings.Split(baseId, "-")
+		if len(parts) < 3 {
+			continue
+		}
+
+		var cleanerId string
+		switch {
+		case strings.Contains(baseId, "CLEAR"):
+			cleanerId = "CLEAR-CLEANER"
+		case strings.Contains(baseId, "MATTE"):
+			cleanerId = "MATTE-CLEANER"
+		case strings.Contains(baseId, "PRIVACY"):
+			cleanerId = "PRIVACY-CLEANER"
+		default:
+			continue
+		}
+		cleanerCount[cleanerId] += itemQty
 	}
 
-	for texture, count := range textureCount {
-		cleanerId := texture + "-CLEANER"
+	var cleanerItems []models.CleanedOrder
+	for cleanerId, count := range cleanerCount {
 		cleanerItems = append(cleanerItems, models.CleanedOrder{
 			No:         orderNo,
 			ProductId:  cleanerId,
-			Qty:        count,
+			MaterialId: "",
+			ModelId:    "",
+			Qty:        count * qty,
 			UnitPrice:  0.00,
 			TotalPrice: 0.00,
 		})

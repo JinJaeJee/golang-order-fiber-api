@@ -6,11 +6,12 @@ import (
 	"strings"
 )
 
-func ParseProductId(platformProductId string) ([]string, int, int) {
+func ParseProductId(platformProductId string, Qty int) ([]string, int, int) {
 
 	cleanedId := strings.TrimLeft(platformProductId, "-%20x3&")
 	cleanedId = strings.ReplaceAll(cleanedId, "%20x", "")
 	cleanedId = strings.ReplaceAll(cleanedId, "--", "")
+
 	productIds := strings.Split(cleanedId, "/")
 
 	extraCount := 0
@@ -24,7 +25,7 @@ func ParseProductId(platformProductId string) ([]string, int, int) {
 		}
 	}
 
-	return productIds, len(productIds), extraCount
+	return productIds, len(productIds) * Qty, extraCount + 1
 }
 
 func ExtractMaterialAndModelId(productId string) (string, string) {

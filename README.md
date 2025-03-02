@@ -7,3 +7,4 @@ case 7 still wipe ไม่รวมกัน
 
 
 //// อาทิต 4/1/2025
+case 7 still wipe ไม่รวมกัน

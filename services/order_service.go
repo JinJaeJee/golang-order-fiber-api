@@ -78,11 +78,11 @@ func addCleanerItem(platformProductIds []string, qty int, extraQty int, orderNo 
 		var cleanerId string
 		switch {
 		case strings.Contains(baseId, "CLEAR"):
-			cleanerId = "CLEAR-CLEANER"
+			cleanerId = "CLEAR-CLEANNER"
 		case strings.Contains(baseId, "MATTE"):
-			cleanerId = "MATTE-CLEANER"
+			cleanerId = "MATTE-CLEANNER"
 		case strings.Contains(baseId, "PRIVACY"):
-			cleanerId = "PRIVACY-CLEANER"
+			cleanerId = "PRIVACY-CLEANNER"
 		default:
 			continue
 		}

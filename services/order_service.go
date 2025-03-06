@@ -4,7 +4,6 @@ import (
 	"strconv"
 	"strings"
 	"fmt"
-	"sort"
 
 	"github.com/JinJaeJee/golang-order-fiber-api/models"
 	"github.com/JinJaeJee/golang-order-fiber-api/utils"

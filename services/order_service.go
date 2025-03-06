@@ -3,6 +3,8 @@ package services
 import (
 	"strconv"
 	"strings"
+	"fmt"
+	"sort"
 
 	"github.com/JinJaeJee/golang-order-fiber-api/models"
 	"github.com/JinJaeJee/golang-order-fiber-api/utils"
@@ -37,7 +39,9 @@ func ProcessOrders(inputOrders []models.InputOrder) []models.CleanedOrder {
 		orderNo++
 	}
 
-	return cleanedOrders
+	reOrderCleanedOrders := mergeProducts(cleanedOrders)
+
+	return reOrderCleanedOrders
 }
 
 func addComplementaryItems(qty int, extraQty int, orderNo int) []models.CleanedOrder {
@@ -105,3 +109,32 @@ func addCleanerItem(platformProductIds []string, qty int, extraQty int, orderNo 
 
 	return cleanerItems
 }
+
+func mergeProducts(products []models.CleanedOrder) []models.CleanedOrder {
+	productMap := make(map[string]models.CleanedOrder)
+	var mergedProducts []models.CleanedOrder
+
+	for _, p := range products {
+		key := fmt.Sprintf("%s-%s-%s", p.ProductId, p.MaterialId, p.ModelId)
+
+		if existingProduct, ok := productMap[key]; ok {
+			existingProduct.Qty += p.Qty
+			existingProduct.TotalPrice += p.TotalPrice
+			productMap[key] = existingProduct
+		} else {
+			productMap[key] = p
+		}
+	}
+
+	for _, p := range productMap {
+		mergedProducts = append(mergedProducts, p)
+	}
+
+
+	for i := range mergedProducts{
+		mergedProducts[i].No = i+1
+	}
+
+	return mergedProducts
+}
+
